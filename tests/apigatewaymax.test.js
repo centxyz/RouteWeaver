@@ -7,6 +7,18 @@ const { createServer } = require('../src/index');
 const baseConfig = { routes: [{ prefix: '/api', upstreams: ['https://one.test', 'https://two.test'], stripPrefix: true, retries: 1 }] };
 
 describe('APIGatewayMax', () => {
+    test('uses the root route as a fallback without stripping the leading slash', async () => {
+        const seen = [];
+        const gateway = new APIGatewayMax({ routes: [
+            { prefix: '/', upstreams: ['https://fallback.test/base/'] },
+            { prefix: '/api', upstreams: ['https://api.test'] }
+        ] }, { fetch: async url => { seen.push(url.toString()); return new Response('ok'); } });
+        await gateway.proxy(request('/'));
+        await gateway.proxy({ ...request('/assets/logo.svg'), search: '?v=2' });
+        await gateway.proxy(request('/api/users'));
+        await gateway.proxy(request('/apiculture'));
+        assert.deepEqual(seen, ['https://fallback.test/', 'https://fallback.test/assets/logo.svg?v=2', 'https://api.test/users', 'https://fallback.test/apiculture']);
+    });
     test('uses longest-prefix routing and round-robin balancing', async () => {
         const seen = [];
         const gateway = new APIGatewayMax({ routes: [

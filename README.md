@@ -49,6 +49,8 @@ Each route supports:
 
 Non-idempotent methods are never automatically retried.
 
+A route with `prefix: "/"` is a catch-all fallback. More specific routes take precedence. The fallback preserves the full incoming pathname even when `stripPrefix` is enabled.
+
 ## Operations
 
 - `GET /__gateway/health` — counters, routes, available upstreams, and open circuits

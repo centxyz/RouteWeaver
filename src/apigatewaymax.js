@@ -16,7 +16,7 @@ class APIGatewayMax {
     }
 
     match(pathname) {
-        return this.routes.find(route => pathname === route.prefix || pathname.startsWith(`${route.prefix}/`)) || null;
+        return this.routes.find(route => route.prefix === '/' || pathname === route.prefix || pathname.startsWith(`${route.prefix}/`)) || null;
     }
 
     async proxy(request) {
@@ -54,7 +54,7 @@ class APIGatewayMax {
 
     async forward(route, upstream, request) {
         let suffix = request.pathname;
-        if (route.stripPrefix) suffix = suffix.slice(route.prefix.length) || '/';
+        if (route.stripPrefix && route.prefix !== '/') suffix = suffix.slice(route.prefix.length) || '/';
         const url = new URL(`${suffix}${request.search || ''}`, upstream.endsWith('/') ? upstream : `${upstream}/`);
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), route.timeoutMs);
